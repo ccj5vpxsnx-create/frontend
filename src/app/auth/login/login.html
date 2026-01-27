@@ -1,0 +1,39 @@
+<div class="container-fluid vh-100">
+    <div class="row h-100 align-items-center justify-content-center bg-light">
+        <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <h2 class="card-title text-center mb-4">
+                        <i class="bi bi-person-circle"></i> Connexion
+                    </h2>
+
+                    <form (ngSubmit)="onLogin()">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input id="username" type="text" class="form-control" [(ngModel)]="username" name="username"
+                                placeholder="Entrez votre nom" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <input id="password" type="password" class="form-control" [(ngModel)]="password"
+                                name="password" placeholder="Entrez votre mot de passe" />
+                        </div>
+
+                   <div class="mb-3 text-end">
+  <a routerLink="/auth/request-email" class="text-decoration-none">
+    Mot de passe oublié ?
+  </a>
+</div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" [disabled]="loading">
+                               
+                                Se connecter           
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

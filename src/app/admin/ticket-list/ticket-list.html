@@ -1,0 +1,33 @@
+<div *ngIf="loading">Chargement des tickets...</div>
+<div *ngIf="error" style="color:red">{{ error }}</div>
+
+<table *ngIf="tickets && tickets.length > 0" border="1" cellspacing="0" cellpadding="5">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Description</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Priority</th>
+      <th>Client</th>
+      <th>Technician</th>
+      <th>Created At</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let ticket of tickets">
+      <td>{{ ticket.title }}</td>
+      <td>{{ ticket.description }}</td>
+      <td>{{ ticket.type }}</td>
+      <td>{{ ticket.status }}</td>
+      <td>{{ ticket.priority }}</td>
+      <td>{{ ticket.clientId?.username || 'N/A' }}</td>
+      <td>{{ ticket.technicianId?.username || 'N/A' }}</td>
+      <td>{{ ticket.createdAt | date:'short' }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div *ngIf="!loading && tickets?.length === 0 && !error">
+  Aucun ticket disponible.
+</div>
