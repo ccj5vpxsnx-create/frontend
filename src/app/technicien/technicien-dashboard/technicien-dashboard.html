@@ -1,11 +1,313 @@
- <div class="container mt-5">
-      <div class="card">
-        <div class="card-body">
-          <h1>🔧 Tableau de bord Technicien</h1>
-          <p>Bienvenue </p>
-          <button class="btn btn-danger" (click)="logout()">
-            Déconnexion
+<div class="min-vh-100 bg-light">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <i class="bi bi-headset me-2"></i>
+        Technicien Dashboard
+      </a>
+      <div class="d-flex align-items-center">
+        <span class="text-white me-3">
+          <i class="bi bi-person-circle me-1"></i>
+          {{ currentUser?.username }}
+        </span>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="bi bi-box-arrow-right me-1"></i>
+          Déconnexion
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <!-- Mes Tickets -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card shadow-sm">
+          <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-clipboard-check me-2"></i>
+              Mes Tickets Assignés
+            </h5>
+            <button class="btn btn-light btn-sm" (click)="openCreateTicketModal()">
+              <i class="bi bi-plus-circle me-1"></i>
+              Nouveau Ticket
+            </button>
+          </div>
+          <div class="card-body">
+            <div *ngIf="loading" class="text-center">
+              <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Chargement...</span>
+              </div>
+            </div>
+
+            <div *ngIf="!loading && myTickets.length === 0" class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Vous n'avez aucun ticket assigné pour le moment
+            </div>
+
+            <div *ngIf="!loading && myTickets.length > 0" class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Titre</th>
+                    <th>Description</th>
+                    <th>Statut</th>
+                    <th>Priorité</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let ticket of myTickets">
+                    <td>{{ ticket.title }}</td>
+                    <td>{{ ticket.description | slice:0:50 }}...</td>
+                    <td>
+                      <span class="badge" [ngClass]="getStatusBadgeClass(ticket.status)">
+                        {{ ticket.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="getPriorityBadgeClass(ticket.priority)">
+                        {{ ticket.priority }}
+                      </span>
+                    </td>
+                    <td>
+                      <span *ngIf="ticket.clientId">
+                        {{ ticket.clientId.username }}
+                      </span>
+                      <span *ngIf="!ticket.clientId" class="text-muted">
+                        N/A
+                      </span>
+                    </td>
+                    <td>{{ ticket.createdAt | date:'short' }}</td>
+                    <td>
+                      <button class="btn btn-sm btn-primary me-1" (click)="viewTicket(ticket)">
+                        <i class="bi bi-eye me-1"></i>
+                        Voir
+                      </button>
+                      <button class="btn btn-sm btn-warning" (click)="openEditTicketModal(ticket)">
+                        <i class="bi bi-pencil me-1"></i>
+                        Modifier
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détails Ticket -->
+<div class="modal" [class.show]="showTicketDetail" [style.display]="showTicketDetail ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-ticket-detailed me-2"></i>
+          Détails du Ticket
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showTicketDetail = false"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedTicket">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <h6 class="text-muted">Titre</h6>
+            <p>{{ selectedTicket.title }}</p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="text-muted">Type</h6>
+            <p><span class="badge bg-info">{{ selectedTicket.type }}</span></p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-12">
+            <h6 class="text-muted">Description</h6>
+            <p>{{ selectedTicket.description }}</p>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <h6 class="text-muted">Statut</h6>
+            <span class="badge" [ngClass]="getStatusBadgeClass(selectedTicket.status)">
+              {{ selectedTicket.status }}
+            </span>
+          </div>
+          <div class="col-md-4">
+            <h6 class="text-muted">Priorité</h6>
+            <span class="badge" [ngClass]="getPriorityBadgeClass(selectedTicket.priority)">
+              {{ selectedTicket.priority }}
+            </span>
+          </div>
+          <div class="col-md-4">
+            <h6 class="text-muted">Urgence</h6>
+            <p>{{ selectedTicket.urgency }}</p>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="mb-3">
+          <h6 class="text-muted mb-2">Changer le Statut</h6>
+          <div class="btn-group" role="group">
+            <button class="btn btn-outline-primary btn-sm" (click)="updateStatus('new')">
+              Nouveau
+            </button>
+            <button class="btn btn-outline-warning btn-sm" (click)="updateStatus('in_progress')">
+              En cours
+            </button>
+            <button class="btn btn-outline-success btn-sm" (click)="updateStatus('resolved')">
+              Résolu
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" (click)="updateStatus('closed')">
+              Fermé
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <button class="btn btn-success" (click)="openConversation()">
+            <i class="bi bi-chat-dots me-1"></i>
+            Ouvrir la Conversation
           </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modal Conversation -->
+<div class="modal" [class.show]="showConversation" [style.display]="showConversation ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-chat-dots me-2"></i>
+          Conversation avec le Client
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showConversation = false"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Messages -->
+        <div class="chat-container mb-3"
+          style="height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 15px;">
+          <div *ngIf="messages.length === 0" class="text-center text-muted">
+            Aucun message pour le moment
+          </div>
+
+          <div *ngFor="let message of messages" class="mb-3">
+            <div [class.text-end]="isMyMessage(message.sender)">
+              <div class="d-inline-block p-2 rounded"
+                [ngClass]="isMyMessage(message.sender) ? 'bg-success text-white' : 'bg-light'" style="max-width: 70%;">
+                <p class="mb-1">{{ message.content }}</p>
+                <small class="opacity-75">
+                  {{ message.createdAt | date:'short' }}
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Message -->
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Tapez votre message..." [(ngModel)]="newMessage"
+            (keyup.enter)="sendMessage()">
+          <button class="btn btn-success" type="button" (click)="sendMessage()">
+            <i class="bi bi-send"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ticket (Création/Edition) -->
+<div class="modal" [class.show]="showTicketModal" [style.display]="showTicketModal ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ isEditingTicket ? 'Modifier' : 'Créer' }} un Ticket</h5>
+        <button type="button" class="btn-close" (click)="showTicketModal = false"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Titre</label>
+          <input type="text" class="form-control" [(ngModel)]="ticketForm.title">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="ticketForm.description"></textarea>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" [(ngModel)]="ticketForm.type">
+              <option value="incident">Incident</option>
+              <option value="request">Demande</option>
+              <option value="change">Changement</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Catégorie</label>
+            <select class="form-select" [(ngModel)]="ticketForm.category">
+              <option value="">-- Choisir --</option>
+              <option *ngFor="let cat of categories" [value]="cat._id">{{ cat.name }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Urgence</label>
+            <select class="form-select" [(ngModel)]="ticketForm.urgency">
+              <option value="low">Faible</option>
+              <option value="medium">Moyenne</option>
+              <option value="high">Élevée</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Impact</label>
+            <select class="form-select" [(ngModel)]="ticketForm.impact">
+              <option value="low">Faible</option>
+              <option value="medium">Moyen</option>
+              <option value="high">Élevé</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Localisation</label>
+          <input type="text" class="form-control" [(ngModel)]="ticketForm.location">
+        </div>
+
+        <div class="mb-3" *ngIf="isEditingTicket">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="ticketForm.status">
+            <option value="new">Nouveau</option>
+            <option value="in_progress">En cours</option>
+            <option value="resolved">Résolu</option>
+            <option value="closed">Fermé</option>
+          </select>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showTicketModal = false">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="saveTicket()">{{ isEditingTicket ? 'Modifier' : 'Créer'
+          }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop -->
+<div class="modal-backdrop fade" [class.show]="showTicketDetail || showConversation || showTicketModal"
+  *ngIf="showTicketDetail || showConversation || showTicketModal"></div>
