@@ -1,0 +1,50 @@
+/* Background image for login page */
+.login-background {
+    /* image is served from the public/ folder at project root */
+    background-image: url('/image.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    /* keep it fixed for a full-page background feel */
+    background-attachment: fixed;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* dark overlay to keep text readable */
+.login-background::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 0;
+}
+
+/* ensure the form sits above the overlay */
+.login-background .row {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* card style to enhance contrast and visibility */
+.login-card,
+.card.bg-white.bg-opacity-90 {
+    background-color: rgba(255, 255, 255, 0.96) !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 3;
+}

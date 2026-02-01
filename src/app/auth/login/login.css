@@ -1,0 +1,126 @@
+/* Background image for login page */
+.login-background {
+    /* image is served from the public/ folder at project root */
+    background-image: url('/image.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    /* keep it fixed for a full-page background feel */
+    background-attachment: fixed;
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* dark overlay to keep text readable */
+.login-background::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 0;
+}
+
+/* ensure the form sits above the overlay */
+.login-background .row {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* card style to enhance contrast and visibility */
+.login-card,
+.card.bg-white.bg-opacity-90 {
+    background-color: rgba(255, 255, 255, 0.96) !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 3;
+}
+
+/* ensure card body spacing */
+.login-card .card-body,
+.card .card-body {
+    padding: 2rem;
+}
+
+/* input controls contrast */
+.form-control {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e6e6e6;
+    box-shadow: none;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
+}
+
+.form-control:focus {
+    border-color: rgba(11, 83, 159, 0.9);
+    box-shadow: 0 4px 18px rgba(11, 83, 159, 0.12);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+/* input-group toggle button */
+.input-group .btn-outline-secondary {
+    border-left: 0;
+    border-radius: 0 .375rem .375rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* gradient primary button */
+.btn-gradient {
+    background: linear-gradient(90deg, #0b539f 0%, #0b6bb6 100%);
+    border: none;
+    color: #fff;
+    padding: .65rem 1rem;
+    font-weight: 600;
+    transition: transform .08s ease, box-shadow .12s ease;
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(11, 83, 159, 0.18);
+}
+
+.form-check-label {
+    user-select: none;
+}
+
+.brand .bi {
+    background: linear-gradient(90deg, #0b539f 0%, #0b6bb6 100%);
+    -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 576px) {
+    .login-card .card-body {
+        padding: 1.25rem;
+    }
+}
+
+/* small adjustments for mobile */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+    }
+}
+
+/* fallback gradient if image is missing */
+.login-background.no-image {
+    background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, NgClass, NgFor, NgIf, DatePipe, SlicePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Authservice } from '../../services/authservice';
-import { TicketService, Ticket } from '../../services/ticket.service';
+import { TicketService } from '../../services/ticket.service';
 import { CategoryService, Category } from '../../services/category.service';
-import { ConversationService, Conversation, Message } from '../../services/conversation.service';
-
+import { Ticket } from '../../interfaces/tiket';
 @Component({
   selector: 'app-technicien-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, NgFor, NgIf, DatePipe, SlicePipe],
+  imports: [CommonModule, FormsModule],
   templateUrl: './technicien-dashboard.html',
   styleUrl: './technicien-dashboard.css'
 })
@@ -21,11 +20,9 @@ export class TechnicienDashboard implements OnInit {
   loading = false;
   error = '';
 
-  // Détails du ticket
   selectedTicket: Ticket | null = null;
   showTicketDetail = false;
 
-  // Create/Edit Modal
   showTicketModal = false;
   isEditingTicket = false;
   ticketForm: any = {
@@ -38,17 +35,9 @@ export class TechnicienDashboard implements OnInit {
     location: '',
     status: 'new'
   };
-
-  // Conversation
-  conversation: Conversation | null = null;
-  messages: Message[] = [];
-  newMessage = '';
-  showConversation = false;
-
   constructor(
     private ticketService: TicketService,
     private categoryService: CategoryService,
-    private conversationService: ConversationService,
     private authService: Authservice,
     private router: Router
   ) { }
@@ -87,25 +76,8 @@ export class TechnicienDashboard implements OnInit {
     });
   }
 
-  // Ouvrir modal Création
-  openCreateTicketModal() {
-    this.isEditingTicket = false;
-    this.selectedTicket = null;
-    this.ticketForm = {
-      title: '',
-      description: '',
-      type: 'incident',
-      category: '',
-      urgency: 'medium',
-      impact: 'medium',
-      location: '',
-      status: 'new'
-    };
-    this.showTicketModal = true;
-  }
-
-  // Ouvrir modal Edition
-  openEditTicketModal(ticket: Ticket) {
+ 
+    openEditTicketModal(ticket: Ticket) {
     this.isEditingTicket = true;
     this.selectedTicket = ticket;
     this.ticketForm = {
@@ -143,17 +115,7 @@ export class TechnicienDashboard implements OnInit {
         },
         error: () => alert('Erreur lors de la modification')
       });
-    } else {
-      // CREATE
-      this.ticketService.createTicket(ticketData).subscribe({
-        next: () => {
-          this.showTicketModal = false;
-          this.loadMyTickets();
-          alert('Ticket créé avec succès');
-        },
-        error: () => alert('Erreur lors de la création')
-      });
-    }
+    } 
   }
 
   calculatePriority(urgency: string, impact: string): string {
@@ -161,12 +123,10 @@ export class TechnicienDashboard implements OnInit {
     if (urgency === 'low' && impact === 'low') return 'low';
     return 'medium';
   }
-
   viewTicket(ticket: Ticket) {
     this.selectedTicket = ticket;
     this.showTicketDetail = true;
   }
-
   updateStatus(status: string) {
     if (!this.selectedTicket) return;
 
@@ -184,77 +144,19 @@ export class TechnicienDashboard implements OnInit {
     });
   }
 
-  openConversation() {
-    if (!this.selectedTicket) return;
-
-    // Vérifier si une conversation existe déjà
-    this.conversationService.getConversationByTicket(this.selectedTicket._id!).subscribe({
-      next: (conv) => {
-        this.conversation = conv;
-        this.loadMessages();
-        this.showConversation = true;
+  deleteTicket(id?: string) {
+    if (!id) return;
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce ticket ?')) return;
+    this.ticketService.deleteTicket(id).subscribe({
+      next: () => {
+        this.loadMyTickets();
       },
       error: (err) => {
-        // Pas de conversation, en créer une
-        this.createConversation();
+        console.error('Erreur lors de la suppression', err);
+        alert('Erreur lors de la suppression du ticket');
       }
     });
   }
-
-  createConversation() {
-    if (!this.selectedTicket) return;
-
-    const clientId = this.selectedTicket.clientId?._id || this.selectedTicket.requester;
-
-    this.conversationService.createConversation({
-      type: 'private',
-      name: `Support - ${this.selectedTicket.title}`,
-      participants: [this.currentUser.id, clientId],
-      createdBy: this.currentUser.id,
-      ticketId: this.selectedTicket._id
-    } as Conversation).subscribe({
-      next: (conv) => {
-        this.conversation = conv;
-        this.messages = [];
-        this.showConversation = true;
-      },
-      error: (err) => {
-        alert('Erreur lors de la création de la conversation');
-      }
-    });
-  }
-
-  loadMessages() {
-    if (!this.conversation) return;
-
-    this.conversationService.getMessages(this.conversation._id!).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des messages');
-      }
-    });
-  }
-
-  sendMessage() {
-    if (!this.conversation || !this.newMessage.trim()) return;
-
-    this.conversationService.sendMessage({
-      conversationId: this.conversation._id!,
-      sender: this.currentUser.id,
-      content: this.newMessage
-    } as Message).subscribe({
-      next: (message) => {
-        this.messages.push(message);
-        this.newMessage = '';
-      },
-      error: (err) => {
-        alert('Erreur lors de l\'envoi du message');
-      }
-    });
-  }
-
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
@@ -279,7 +181,4 @@ export class TechnicienDashboard implements OnInit {
     return classes[priority] || 'bg-info';
   }
 
-  isMyMessage(senderId: string): boolean {
-    return senderId === this.currentUser.id;
-  }
 }

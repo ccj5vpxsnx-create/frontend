@@ -34,21 +34,20 @@ export class CategoryService {
         });
     }
 
-    // Récupérer toutes les catégories
-    getCategories(params: any = {}): Observable<CategoriesResponse> {
+    getCategories(page: number = 1, limit: number = 10, search: string = ''): Observable<CategoriesResponse> {
         const queryParams = new URLSearchParams();
-        Object.keys(params).forEach(key => {
-            if (params[key]) {
-                queryParams.append(key, params[key]);
-            }
-        });
+        queryParams.append('page', page.toString());
+        queryParams.append('limit', limit.toString());
+        if (search) {
+            queryParams.append('search', search);
+        }
+
         return this.http.get<CategoriesResponse>(
             `${this.apiUrl}?${queryParams.toString()}`,
             { headers: this.getHeaders() }
         );
     }
 
-    // Récupérer une catégorie par ID
     getCategoryById(id: string): Observable<Category> {
         return this.http.get<Category>(
             `${this.apiUrl}/${id}`,
@@ -56,7 +55,6 @@ export class CategoryService {
         );
     }
 
-    // Créer une nouvelle catégorie
     createCategory(category: Category): Observable<Category> {
         return this.http.post<Category>(
             this.apiUrl,
@@ -65,7 +63,6 @@ export class CategoryService {
         );
     }
 
-    // Mettre à jour une catégorie
     updateCategory(id: string, updates: Partial<Category>): Observable<Category> {
         return this.http.patch<Category>(
             `${this.apiUrl}/${id}`,
@@ -73,8 +70,6 @@ export class CategoryService {
             { headers: this.getHeaders() }
         );
     }
-
-    // Supprimer une catégorie
     deleteCategory(id: string): Observable<any> {
         return this.http.delete(
             `${this.apiUrl}/${id}`,

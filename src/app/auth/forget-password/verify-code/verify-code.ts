@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Authservice } from '../../../services/authservice';
@@ -7,7 +7,7 @@ import { Authservice } from '../../../services/authservice';
 @Component({
   selector: 'app-verify-code',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './verify-code.html',
   styleUrl: './verify-code.css',
 })

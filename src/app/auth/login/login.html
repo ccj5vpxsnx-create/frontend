@@ -1,11 +1,13 @@
-<div class="container-fluid vh-100">
-    <div class="row h-100 align-items-center justify-content-center bg-light">
+<div class="container-fluid vh-100 login-background">
+    <div class="row h-100 align-items-center justify-content-center">
         <div class="col-11 col-sm-8 col-md-6 col-lg-4">
-            <div class="card shadow">
+            <div class="card shadow bg-white bg-opacity-90 login-card">
                 <div class="card-body p-4">
-                    <h2 class="card-title text-center mb-4">
-                        <i class="bi bi-person-circle"></i> Connexion
-                    </h2>
+                    <div class="brand text-center mb-2">
+                        <i class="bi bi-ticket-perforated fs-1 text-primary"></i>
+                    </div>
+                    <h2 class="card-title text-center mb-2">Connexion</h2>
+                    <p class="text-muted text-center mb-4 small">Connectez-vous pour accéder au tableau de bord</p>
 
                     <form (ngSubmit)="onLogin()">
                         <div class="mb-3">
@@ -16,21 +18,43 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">Mot de passe</label>
-                            <input id="password" type="password" class="form-control" [(ngModel)]="password"
-                                name="password" placeholder="Entrez votre mot de passe" />
+                            <div class="input-group">
+                                <input id="password" [type]="showPassword ? 'text' : 'password'" class="form-control"
+                                    [(ngModel)]="password" (ngModelChange)="passwordInvalid = false; error = ''"
+                                    [ngClass]="{'is-invalid': passwordInvalid}" name="password"
+                                    placeholder="Entrez votre mot de passe" />
+                                <button class="btn btn-outline-secondary" type="button" (click)="toggleShowPassword()"
+                                    [attr.aria-pressed]="showPassword" title="Afficher / Masquer le mot de passe">
+                                    <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                                </button>
+                            </div>
+                            @if (passwordInvalid) {
+                                <div class="invalid-feedback d-block">Le mot de passe est incorrect</div>
+                            }
                         </div>
 
-                   <div class="mb-3 text-end">
-  <a routerLink="/auth/request-email" class="text-decoration-none">
-    Mot de passe oublié ?
-  </a>
-</div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe" [(ngModel)]="rememberMe"
+                                name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">Se souvenir de moi</label>
+                        </div>
+
+                        <div class="mb-3 text-end">
+                            <a routerLink="/auth/request-email" class="text-decoration-none small">Mot de passe oublié
+                                ?</a>
+                        </div>
+
+                        @if (error && !passwordInvalid) {
+                            <div class="alert alert-danger">{{ error }}</div>
+                        }
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" [disabled]="loading">
-                               
-                                Se connecter           
+                            <button type="submit" class="btn btn-primary btn-lg btn-gradient" [disabled]="loading">
+                                Se connecter
                             </button>
                         </div>
+
+                        <div class="text-center mt-3 small text-muted">Contactez l'administrateur si vous n'avez pas de
+                            compte.</div>
                     </form>
                 </div>
             </div>

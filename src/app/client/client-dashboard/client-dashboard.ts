@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, NgClass, NgFor, NgIf, DatePipe, SlicePipe } from '@angular/common';
+import { CommonModule, NgClass, DatePipe, SlicePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Authservice } from '../../services/authservice';
 import { TicketService, Ticket } from '../../services/ticket.service';
-import { CategoryService, Category } from '../../services/category.service';
-import { ConversationService, Conversation, Message } from '../../services/conversation.service';
+import { CategoryService } from '../../services/category.service';
+import { Category } from '../../interfaces/category';
+import { Message } from '../../interfaces/message';
 
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, NgFor, NgIf, DatePipe, SlicePipe],
+  imports: [CommonModule, FormsModule, NgClass, DatePipe],
   templateUrl: './client-dashboard.html',
   styleUrl: './client-dashboard.css'
 })
@@ -21,7 +22,6 @@ export class ClientDashboard implements OnInit {
   loading = false;
   error = '';
 
-  // Créer un ticket
   showCreateModal = false;
   ticketForm = {
     title: '',
@@ -32,18 +32,11 @@ export class ClientDashboard implements OnInit {
     impact: 'medium',
     location: ''
   };
-
-  // Conversation
   selectedTicket: Ticket | null = null;
-  conversation: Conversation | null = null;
-  messages: Message[] = [];
-  newMessage = '';
-  showConversation = false;
 
   constructor(
     private ticketService: TicketService,
     private categoryService: CategoryService,
-    private conversationService: ConversationService,
     private authService: Authservice,
     private router: Router
   ) { }
@@ -54,7 +47,6 @@ export class ClientDashboard implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
-
     this.loadMyTickets();
     this.loadCategories();
   }
@@ -66,10 +58,6 @@ export class ClientDashboard implements OnInit {
         this.myTickets = response.items;
         this.loading = false;
       },
-      error: (err) => {
-        this.error = 'Erreur lors du chargement des tickets';
-        this.loading = false;
-      }
     });
   }
 
@@ -83,7 +71,6 @@ export class ClientDashboard implements OnInit {
       }
     });
   }
-
   openCreateModal() {
     this.ticketForm = {
       title: '',
@@ -136,53 +123,7 @@ export class ClientDashboard implements OnInit {
     return 'medium';
   }
 
-  openConversation(ticket: Ticket) {
-    this.selectedTicket = ticket;
 
-    // Vérifier si une conversation existe
-    this.conversationService.getConversationByTicket(ticket._id!).subscribe({
-      next: (conv) => {
-        this.conversation = conv;
-        this.loadMessages();
-        this.showConversation = true;
-      },
-      error: (err) => {
-        // Pas de conversation encore
-        alert('Aucune conversation n\'a été ouverte par le support pour ce ticket');
-      }
-    });
-  }
-
-  loadMessages() {
-    if (!this.conversation) return;
-
-    this.conversationService.getMessages(this.conversation._id!).subscribe({
-      next: (messages) => {
-        this.messages = messages;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des messages');
-      }
-    });
-  }
-
-  sendMessage() {
-    if (!this.conversation || !this.newMessage.trim()) return;
-
-    this.conversationService.sendMessage({
-      conversationId: this.conversation._id!,
-      sender: this.currentUser.id,
-      content: this.newMessage
-    } as Message).subscribe({
-      next: (message) => {
-        this.messages.push(message);
-        this.newMessage = '';
-      },
-      error: (err) => {
-        alert('Erreur lors de l\'envoi du message');
-      }
-    });
-  }
 
   logout() {
     this.authService.logout();
@@ -211,4 +152,5 @@ export class ClientDashboard implements OnInit {
   isMyMessage(senderId: string): boolean {
     return senderId === this.currentUser.id;
   }
+
 }

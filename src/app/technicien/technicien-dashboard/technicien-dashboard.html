@@ -27,26 +27,28 @@
           <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
               <i class="bi bi-clipboard-check me-2"></i>
-              Mes Tickets Assignés
+              Mes tickets assignés
             </h5>
-            <button class="btn btn-light btn-sm" (click)="openCreateTicketModal()">
-              <i class="bi bi-plus-circle me-1"></i>
-              Nouveau Ticket
-            </button>
+
           </div>
           <div class="card-body">
-            <div *ngIf="loading" class="text-center">
+            @if (loading) {
+            <div class="text-center">
               <div class="spinner-border text-success" role="status">
                 <span class="visually-hidden">Chargement...</span>
               </div>
             </div>
+            }
 
-            <div *ngIf="!loading && myTickets.length === 0" class="alert alert-info">
+            @if (!loading && myTickets.length === 0) {
+            <div class="alert alert-info">
               <i class="bi bi-info-circle me-2"></i>
               Vous n'avez aucun ticket assigné pour le moment
             </div>
+            }
 
-            <div *ngIf="!loading && myTickets.length > 0" class="table-responsive">
+            @if (!loading && myTickets.length > 0) {
+            <div class="table-responsive">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -60,7 +62,8 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let ticket of myTickets">
+                  @for (ticket of myTickets; track ticket._id) {
+                  <tr>
                     <td>{{ ticket.title }}</td>
                     <td>{{ ticket.description | slice:0:50 }}...</td>
                     <td>
@@ -74,12 +77,11 @@
                       </span>
                     </td>
                     <td>
-                      <span *ngIf="ticket.clientId">
-                        {{ ticket.clientId.username }}
-                      </span>
-                      <span *ngIf="!ticket.clientId" class="text-muted">
-                        N/A
-                      </span>
+                      @if (ticket.clientId) {
+                      <span>{{ ticket.clientId.username }}</span>
+                      } @else {
+                      <span class="text-muted">N/A</span>
+                      }
                     </td>
                     <td>{{ ticket.createdAt | date:'short' }}</td>
                     <td>
@@ -91,11 +93,17 @@
                         <i class="bi bi-pencil me-1"></i>
                         Modifier
                       </button>
+                      <button class="btn btn-sm btn-danger ms-1" (click)="deleteTicket(ticket._id)">
+                        <i class="bi bi-trash me-1"></i>
+                        Supprimer
+                      </button>
                     </td>
                   </tr>
+                  }
                 </tbody>
               </table>
             </div>
+            }
           </div>
         </div>
       </div>
@@ -114,7 +122,8 @@
         </h5>
         <button type="button" class="btn-close btn-close-white" (click)="showTicketDetail = false"></button>
       </div>
-      <div class="modal-body" *ngIf="selectedTicket">
+      @if (selectedTicket) {
+      <div class="modal-body">
         <div class="row mb-3">
           <div class="col-md-6">
             <h6 class="text-muted">Titre</h6>
@@ -171,59 +180,8 @@
             </button>
           </div>
         </div>
-
-        <div class="mb-3">
-          <button class="btn btn-success" (click)="openConversation()">
-            <i class="bi bi-chat-dots me-1"></i>
-            Ouvrir la Conversation
-          </button>
-        </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Conversation -->
-<div class="modal" [class.show]="showConversation" [style.display]="showConversation ? 'block' : 'none'" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-chat-dots me-2"></i>
-          Conversation avec le Client
-        </h5>
-        <button type="button" class="btn-close btn-close-white" (click)="showConversation = false"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Messages -->
-        <div class="chat-container mb-3"
-          style="height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 15px;">
-          <div *ngIf="messages.length === 0" class="text-center text-muted">
-            Aucun message pour le moment
-          </div>
-
-          <div *ngFor="let message of messages" class="mb-3">
-            <div [class.text-end]="isMyMessage(message.sender)">
-              <div class="d-inline-block p-2 rounded"
-                [ngClass]="isMyMessage(message.sender) ? 'bg-success text-white' : 'bg-light'" style="max-width: 70%;">
-                <p class="mb-1">{{ message.content }}</p>
-                <small class="opacity-75">
-                  {{ message.createdAt | date:'short' }}
-                </small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Input Message -->
-        <div class="input-group">
-          <input type="text" class="form-control" placeholder="Tapez votre message..." [(ngModel)]="newMessage"
-            (keyup.enter)="sendMessage()">
-          <button class="btn btn-success" type="button" (click)="sendMessage()">
-            <i class="bi bi-send"></i>
-          </button>
-        </div>
-      </div>
+      }
     </div>
   </div>
 </div>
@@ -259,7 +217,9 @@
             <label class="form-label">Catégorie</label>
             <select class="form-select" [(ngModel)]="ticketForm.category">
               <option value="">-- Choisir --</option>
-              <option *ngFor="let cat of categories" [value]="cat._id">{{ cat.name }}</option>
+              @for (cat of categories; track cat._id) {
+              <option [value]="cat._id">{{ cat.name }}</option>
+              }
             </select>
           </div>
         </div>
@@ -288,7 +248,8 @@
           <input type="text" class="form-control" [(ngModel)]="ticketForm.location">
         </div>
 
-        <div class="mb-3" *ngIf="isEditingTicket">
+        @if (isEditingTicket) {
+        <div class="mb-3">
           <label class="form-label">Statut</label>
           <select class="form-select" [(ngModel)]="ticketForm.status">
             <option value="new">Nouveau</option>
@@ -297,6 +258,7 @@
             <option value="closed">Fermé</option>
           </select>
         </div>
+        }
 
       </div>
       <div class="modal-footer">
@@ -309,5 +271,6 @@
 </div>
 
 <!-- Backdrop -->
-<div class="modal-backdrop fade" [class.show]="showTicketDetail || showConversation || showTicketModal"
-  *ngIf="showTicketDetail || showConversation || showTicketModal"></div>
+@if (showTicketDetail || showTicketModal) {
+<div class="modal-backdrop fade show"></div>
+}
