@@ -4,8 +4,9 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Authservice } from '../../services/authservice';
 import { TicketService } from '../../services/ticket.service';
-import { CategoryService, Category } from '../../services/category.service';
+import { CategoryService } from '../../services/category.service';
 import { Ticket } from '../../interfaces/tiket';
+import { Category } from '../../interfaces/category';
 @Component({
   selector: 'app-technicien-dashboard',
   standalone: true,

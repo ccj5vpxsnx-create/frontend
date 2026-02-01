@@ -1,92 +1,186 @@
-<div class="min-vh-100 bg-light">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-info">
+<div class="min-vh-100 bg-light-subtle">
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-dark bg-info shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand">
+      <span class="navbar-brand fw-bold">
         <i class="bi bi-ticket-perforated me-2"></i>
-        Mes tickets
-      </a>
-      <span class="text-white">
-        <i class="bi bi-person-badge me-1"></i>
-        {{ currentUser?.username }}
+        Espace Client
       </span>
+      <button class="btn btn-outline-light btn-sm" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        Déconnexion
+      </button>
     </div>
   </nav>
 
+  <!-- CONTENT -->
   <div class="container mt-4">
-    <div class="row justify-content-center">
-      <div class="col-lg-10">
-        <div class="card shadow-sm">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Mes tickets</h5>
-            <button class="btn btn-light btn-sm" (click)="openCreateModal()">
-              <i class="bi bi-plus-circle me-1"></i>
-              Nouveau ticket
-            </button>
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">Mes Tickets</h5>
+        <button class="btn btn-light btn-sm" (click)="openCreateTicket()">
+          <i class="bi bi-plus-circle me-1"></i>
+          Nouveau Ticket
+        </button>
+      </div>
+
+      <div class="card-body p-4">
+
+        @if (loading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
           </div>
-          <div class="card-body p-4">
-            @if (loading) {
-            <div class="text-center py-5">
-              <div class="spinner-border text-info" role="status"></div>
-              <p class="text-muted mt-2">Chargement des tickets...</p>
-            </div>
-            } @else {
-            @if (myTickets.length === 0) {
-            <div class="text-center py-5">
-              <i class="bi bi-ticket text-muted display-5 mb-3"></i>
-              <h5 class="text-muted">Aucun ticket</h5>
-              <p class="text-muted">Créez votre premier ticket pour commencer</p>
-              <button class="btn btn-primary" (click)="openCreateModal()">
-                <i class="bi bi-plus-circle me-1"></i>
-                Créer un ticket
-              </button>
-            </div>
-            } @else {
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead class="table-light">
-                  <tr>
-                    <th class="ps-4">Titre</th>
-                    <th>Type</th>
-                    <th>Statut</th>
-                    <th>Priorité</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (ticket of myTickets; track ticket._id) {
-                  <tr>
-                    <td class="ps-4">
-                      <div class="fw-medium">{{ ticket.title }}</div>
-                      <small class="text-muted d-block mt-1"
-                        style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">{{ ticket.description
-                        }}</small>
-                    </td>
-                    <td>
-                      <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">{{
-                        ticket.type }}</span>
-                    </td>
-                    <td>
-                      <span class="badge d-inline-flex align-items-center gap-1"
-                        [ngClass]="getStatusBadgeClass(ticket.status)">{{ ticket.status }}</span>
-                    </td>
-                    <td>
-                      <span class="badge d-inline-flex align-items-center gap-1"
-                        [ngClass]="getPriorityBadgeClass(ticket.priority)">{{ ticket.priority }}</span>
-                    </td>
-                    <td>
-                      <div class="text-muted small">{{ ticket.createdAt | date:'dd/MM/yyyy' }}</div>
-                      <div class="text-muted small">{{ ticket.createdAt | date:'HH:mm' }}</div>
-                    </td>
-                  </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-            }
-            }
+        }
+
+        @else {
+        @if (tickets.length === 0) {
+          <div class="text-center text-muted py-5">
+            Aucun ticket disponible
           </div>
+        }
+
+        @else {
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Titre</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Priorité</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (ticket of tickets; track ticket._id) {
+              <tr>
+                <td class="fw-medium">{{ ticket.title }}</td>
+
+                <td>
+                  <span class="badge bg-info bg-opacity-10 text-info">
+                    {{ ticket.type }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge d-inline-flex align-items-center gap-1"
+                        [ngClass]="getStatusBadgeClass(ticket.status)">
+                    {{ getStatusLabel(ticket.status) }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="badge"
+                        [ngClass]="ticket.priority === 'high' ? 'bg-danger' :
+                                   ticket.priority === 'medium' ? 'bg-warning text-dark' : 'bg-success'">
+                    {{ ticket.priority }}
+                  </span>
+                </td>
+
+                <td>
+                  {{ ticket.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+
+                <td>
+                  <button class="btn btn-sm btn-outline-danger"
+                          (click)="deleteTicket(ticket._id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
         </div>
+        }
+        }
+
       </div>
     </div>
   </div>
 </div>
+
+<!-- MODAL CREATE TICKET -->
+@if (showTicketModal) {
+<div class="modal fade show d-block" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Créer un Ticket</h5>
+        <button class="btn-close btn-close-white"
+          (click)="showTicketModal = false"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row g-3">
+
+          <div class="col-md-12">
+            <label class="form-label fw-medium">Titre</label>
+            <input class="form-control" [(ngModel)]="ticketForm.title">
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-medium">Description</label>
+            <textarea class="form-control" rows="3"
+              [(ngModel)]="ticketForm.description"></textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-medium">Type</label>
+            <select class="form-select" [(ngModel)]="ticketForm.type">
+              <option value="incident">Incident</option>
+              <option value="request">Demande</option>
+              <option value="change">Changement</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-medium">Catégorie</label>
+            <select class="form-select" [(ngModel)]="ticketForm.category">
+              <option value="">-- Choisir --</option>
+              @for (cat of categories; track cat._id) {
+                <option [value]="cat._id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-medium">Urgence</label>
+            <select class="form-select" [(ngModel)]="ticketForm.urgency">
+              <option value="low">Faible</option>
+              <option value="medium">Moyenne</option>
+              <option value="high">Élevée</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-medium">Impact</label>
+            <select class="form-select" [(ngModel)]="ticketForm.impact">
+              <option value="low">Faible</option>
+              <option value="medium">Moyen</option>
+              <option value="high">Élevé</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-medium">Localisation</label>
+            <input class="form-control" [(ngModel)]="ticketForm.location">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary"
+          (click)="showTicketModal = false">Annuler</button>
+        <button class="btn btn-primary"
+          (click)="createTicket()">Créer</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+}

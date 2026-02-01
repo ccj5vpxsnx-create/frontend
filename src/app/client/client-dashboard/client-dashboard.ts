@@ -1,28 +1,26 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, NgClass, DatePipe, SlicePipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { CommonModule, DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Authservice } from '../../services/authservice';
-import { TicketService, Ticket } from '../../services/ticket.service';
+import { Router } from '@angular/router';
+import { TicketService } from '../../services/ticket.service';
 import { CategoryService } from '../../services/category.service';
-import { Category } from '../../interfaces/category';
-import { Message } from '../../interfaces/message';
+import { Authservice } from '../../services/authservice';
 
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, DatePipe],
-  templateUrl: './client-dashboard.html',
-  styleUrl: './client-dashboard.css'
+  imports: [CommonModule, FormsModule, DatePipe, NgClass],
+  templateUrl: './client-dashboard.html'
 })
 export class ClientDashboard implements OnInit {
-  currentUser: any = null;
-  myTickets: Ticket[] = [];
-  categories: Category[] = [];
-  loading = false;
-  error = '';
 
-  showCreateModal = false;
+  currentUser: any;
+  tickets: any[] = [];
+  categories: any[] = [];
+  loading = false;
+
+  showTicketModal = false;
+
   ticketForm = {
     title: '',
     description: '',
@@ -32,46 +30,37 @@ export class ClientDashboard implements OnInit {
     impact: 'medium',
     location: ''
   };
-  selectedTicket: Ticket | null = null;
 
   constructor(
     private ticketService: TicketService,
     private categoryService: CategoryService,
     private authService: Authservice,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.currentUser = this.authService.getUser();
-    if (!this.currentUser || (this.currentUser.type !== 'client' && this.currentUser.type !== 'user')) {
-      this.router.navigate(['/login']);
-      return;
-    }
-    this.loadMyTickets();
+    this.loadTickets();
     this.loadCategories();
   }
 
-  loadMyTickets() {
+  loadTickets() {
     this.loading = true;
     this.ticketService.getTickets({ clientId: this.currentUser.id }).subscribe({
-      next: (response) => {
-        this.myTickets = response.items;
+      next: res => {
+        this.tickets = res.items;
         this.loading = false;
-      },
+      }
     });
   }
 
   loadCategories() {
     this.categoryService.getCategories().subscribe({
-      next: (response) => {
-        this.categories = response.items;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des catégories');
-      }
+      next: res => this.categories = res.items
     });
   }
-  openCreateModal() {
+
+  openCreateTicket() {
     this.ticketForm = {
       title: '',
       description: '',
@@ -81,76 +70,75 @@ export class ClientDashboard implements OnInit {
       impact: 'medium',
       location: ''
     };
-    this.showCreateModal = true;
+    this.showTicketModal = true;
   }
 
   createTicket() {
     if (!this.ticketForm.title || !this.ticketForm.description || !this.ticketForm.category) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      alert('Champs obligatoires manquants');
       return;
     }
 
-    const newTicket: Ticket = {
-      title: this.ticketForm.title,
-      description: this.ticketForm.description,
-      type: this.ticketForm.type,
-      category: this.ticketForm.category,
-      urgency: this.ticketForm.urgency,
-      impact: this.ticketForm.impact,
-      priority: this.calculatePriority(this.ticketForm.urgency, this.ticketForm.impact),
-      location: this.ticketForm.location,
+    const ticket = {
+      ...this.ticketForm,
       status: 'new',
-      source: 'helpdesk',
-      requester: this.currentUser.id,
-      clientId: this.currentUser.id
+      priority: this.calculatePriority(this.ticketForm.urgency, this.ticketForm.impact),
+      clientId: this.currentUser.id,
+      requester: this.currentUser.id
     };
 
-    this.ticketService.createTicket(newTicket).subscribe({
+    this.ticketService.createTicket(ticket).subscribe({
       next: () => {
-        this.showCreateModal = false;
-        this.loadMyTickets();
-        alert('Ticket créé avec succès!');
-      },
-      error: (err) => {
-        alert('Erreur lors de la création du ticket');
+        this.showTicketModal = false;
+        this.loadTickets();
       }
     });
   }
 
-  calculatePriority(urgency: string, impact: string): string {
-    if (urgency === 'high' || impact === 'high') return 'high';
-    if (urgency === 'low' && impact === 'low') return 'low';
+  deleteTicket(ticketId: string) {
+    if (!confirm('Voulez-vous vraiment supprimer ce ticket ?')) {
+      return;
+    }
+
+    this.ticketService.deleteTicket(ticketId).subscribe({
+      next: () => {
+        this.loadTickets();
+      }
+    });
+  }
+
+  calculatePriority(u: string, i: string): string {
+    if (u === 'high' || i === 'high') return 'high';
+    if (u === 'low' && i === 'low') return 'low';
     return 'medium';
   }
 
+  getStatusLabel(status: string): string {
+    const map: any = {
+      new: 'Nouveau',
+      assigned: 'Assigné',
+      in_progress: 'En cours',
+      waiting: 'En attente',
+      resolved: 'Résolu',
+      closed: 'Fermé'
+    };
+    return map[status] || status;
+  }
 
+  getStatusBadgeClass(status: string): string {
+    const map: any = {
+      new: 'bg-primary',
+      assigned: 'bg-info',
+      in_progress: 'bg-warning text-dark',
+      waiting: 'bg-secondary',
+      resolved: 'bg-success',
+      closed: 'bg-dark'
+    };
+    return map[status] || 'bg-secondary';
+  }
 
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
-
-  getStatusBadgeClass(status: string): string {
-    const classes: any = {
-      'new': 'bg-primary',
-      'in_progress': 'bg-warning',
-      'resolved': 'bg-success',
-      'closed': 'bg-secondary'
-    };
-    return classes[status] || 'bg-info';
-  }
-
-  getPriorityBadgeClass(priority: string): string {
-    const classes: any = {
-      'low': 'bg-success',
-      'medium': 'bg-warning',
-      'high': 'bg-danger'
-    };
-    return classes[priority] || 'bg-info';
-  }
-
-  isMyMessage(senderId: string): boolean {
-    return senderId === this.currentUser.id;
-  }
-
 }

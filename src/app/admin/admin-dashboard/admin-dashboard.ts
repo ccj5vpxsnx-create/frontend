@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { Authservice } from '../../services/authservice';
 import { TicketService } from '../../services/ticket.service';
 import { UserService } from '../../services/user.service';
-import { CategoryService, Category } from '../../services/category.service';
+import { CategoryService } from '../../services/category.service';
 import { Ticket } from '../../interfaces/tiket';
 
 import { TicketStats } from '../../interfaces/TicketStats';
 import { User } from '../../interfaces/user';
+import { Category } from '../../interfaces/category';
 
 @Component({
   selector: 'app-admin-dashboard',
