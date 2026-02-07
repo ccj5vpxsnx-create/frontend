@@ -4,7 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TicketService } from '../../services/ticket.service';
 import { CategoryService } from '../../services/category.service';
+import { ConversationService } from '../../services/conversation.service';
 import { Authservice } from '../../services/authservice';
+import { Conversation } from '../../interfaces/conversation';
+import { Message } from '../../interfaces/message';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -21,6 +24,13 @@ export class ClientDashboard implements OnInit {
 
   showTicketModal = false;
 
+  // Conversations & Chat
+  currentView: 'tickets' | 'conversations' = 'tickets';
+  conversations: Conversation[] = [];
+  selectedConversation: Conversation | null = null;
+  messages: Message[] = [];
+  newMessageContent = '';
+
   ticketForm = {
     title: '',
     description: '',
@@ -34,6 +44,7 @@ export class ClientDashboard implements OnInit {
   constructor(
     private ticketService: TicketService,
     private categoryService: CategoryService,
+    private conversationService: ConversationService,
     private authService: Authservice,
     private router: Router
   ) {}
@@ -42,6 +53,7 @@ export class ClientDashboard implements OnInit {
     this.currentUser = this.authService.getUser();
     this.loadTickets();
     this.loadCategories();
+    this.loadConversations();
   }
 
   loadTickets() {
@@ -135,6 +147,106 @@ export class ClientDashboard implements OnInit {
       closed: 'bg-dark'
     };
     return map[status] || 'bg-secondary';
+  }
+
+  // ========== CONVERSATIONS & MESSAGES ==========
+
+  changeView(view: 'tickets' | 'conversations') {
+    this.currentView = view;
+    if (view === 'conversations') {
+      this.loadConversations();
+    }
+  }
+
+  loadConversations() {
+    this.conversationService.getMyConversations().subscribe({
+      next: (convs: any) => {
+        this.conversations = Array.isArray(convs) ? convs : (convs?.items || []);
+      },
+      error: (err) => {
+        console.error('Erreur chargement conversations', err);
+        this.conversations = [];
+      }
+    });
+  }
+
+  openConversation(conversation: Conversation) {
+    this.selectedConversation = conversation;
+    if (conversation._id) {
+      this.loadMessages(conversation._id);
+    } else {
+      this.messages = [];
+    }
+  }
+
+  openConversationByTicket(ticketId: string) {
+    this.conversationService.getConversationByTicket(ticketId).subscribe({
+      next: (conv) => {
+        if (conv && conv._id) {
+          this.currentView = 'conversations';
+          this.loadConversations();
+          this.openConversation(conv);
+        } else {
+          alert('Aucune conversation trouvée pour ce ticket. L\'admin doit d\'abord ouvrir une conversation.');
+        }
+      },
+      error: () => {
+        alert('Aucune conversation pour ce ticket. L\'admin doit d\'abord ouvrir une conversation.');
+      }
+    });
+  }
+
+  loadMessages(conversationId: string) {
+    if (!conversationId) {
+      this.messages = [];
+      return;
+    }
+    this.conversationService.getMessages(conversationId).subscribe({
+      next: (msgs: any) => {
+        this.messages = Array.isArray(msgs) ? msgs : (msgs?.items || []);
+      },
+      error: (err) => {
+        console.error('Erreur chargement messages', err);
+        this.messages = [];
+      }
+    });
+  }
+
+  sendMessage() {
+    if (!this.newMessageContent.trim() || !this.selectedConversation) return;
+    if (!this.selectedConversation._id) {
+      alert('Erreur: conversation invalide. Veuillez rouvrir la conversation.');
+      return;
+    }
+
+    const message: Message = {
+      conversationId: this.selectedConversation._id,
+      sender: this.currentUser.id,
+      senderName: this.currentUser.username,
+      content: this.newMessageContent.trim()
+    };
+
+    this.conversationService.sendMessage(message).subscribe({
+      next: (msg) => {
+        this.messages.push(msg);
+        this.newMessageContent = '';
+      },
+      error: (err) => {
+        console.error('Erreur envoi message', err);
+        alert('Erreur lors de l\'envoi du message');
+      }
+    });
+  }
+
+  closeConversation() {
+    this.selectedConversation = null;
+    this.messages = [];
+    this.newMessageContent = '';
+  }
+
+  isMyMessage(msg: Message): boolean {
+    const senderId = (msg.sender as any)?._id || msg.sender;
+    return senderId === this.currentUser.id;
   }
 
   logout() {

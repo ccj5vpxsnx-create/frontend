@@ -6,8 +6,10 @@ import { Authservice } from '../../services/authservice';
 import { TicketService } from '../../services/ticket.service';
 import { UserService } from '../../services/user.service';
 import { CategoryService } from '../../services/category.service';
+import { ConversationService } from '../../services/conversation.service';
 import { Ticket } from '../../interfaces/tiket';
-
+import { Conversation } from '../../interfaces/conversation';
+import { Message } from '../../interfaces/message';
 import { TicketStats } from '../../interfaces/TicketStats';
 import { User } from '../../interfaces/user';
 import { Category } from '../../interfaces/category';
@@ -20,12 +22,21 @@ import { Category } from '../../interfaces/category';
   styleUrl: './admin-dashboard.css'
 })
 export class AdminDashboard implements OnInit {
-  currentView: 'tickets' | 'technicians' | 'categories' | 'stats' | 'clients' = 'stats';
+  currentView: 'tickets' | 'technicians' | 'categories' | 'stats' | 'clients' | 'conversations' = 'stats';
   tickets: Ticket[] = [];
   technicians: User[] = [];
   categories: Category[] = [];
   stats: TicketStats | null = null;
   clients: User[] = [];
+
+  // Conversation & Chat
+  conversations: Conversation[] = [];
+  selectedConversation: Conversation | null = null;
+  messages: Message[] = [];
+  newMessageContent = '';
+  showCreateConversationModal = false;
+  conversationTicketId = '';
+  conversationClientId = '';
 
 
 
@@ -80,6 +91,7 @@ export class AdminDashboard implements OnInit {
     private ticketService: TicketService,
     private userService: UserService,
     private categoryService: CategoryService,
+    private conversationService: ConversationService,
     private authService: Authservice,
     private router: Router
   ) { }
@@ -103,8 +115,11 @@ export class AdminDashboard implements OnInit {
     this.loadclient();
   }
 
-  changeView(view: 'tickets' | 'technicians' | 'categories' | 'stats' | 'clients') {
+  changeView(view: 'tickets' | 'technicians' | 'categories' | 'stats' | 'clients' | 'conversations') {
     this.currentView = view;
+    if (view === 'conversations') {
+      this.loadConversations();
+    }
   }
   loadStats() {
     this.ticketService.getStats().subscribe((stats) => {
@@ -160,6 +175,7 @@ export class AdminDashboard implements OnInit {
     }
     const ticketData: any = {
       ...this.ticketForm,
+      adminId: this.currentUser.id,
       requester: this.isEditingTicket && this.selectedTicket ? this.selectedTicket.requester : this.currentUser.id
     };
 
@@ -208,7 +224,8 @@ export class AdminDashboard implements OnInit {
     if (!this.selectedTicket || !this.selectedTechnicianId) return;
 
     this.ticketService.updateTicket(this.selectedTicket._id!, {
-      technicianId: this.selectedTechnicianId
+      technicianId: this.selectedTechnicianId,
+      adminId: this.currentUser.id
     }).subscribe(
       () => {
         this.showAssignModal = false;
@@ -272,10 +289,13 @@ export class AdminDashboard implements OnInit {
 
   loadclient() {
     this.userService.getUsers({ type: 'client' }).subscribe(
-      (response) => {
-        this.clients = response.items;
+      (response: any) => {
+        this.clients = Array.isArray(response) ? response : (response?.items || []);
       },
-      (err) => console.error('Erreur lors du chargement des clients', err)
+      (err) => {
+        console.error('Erreur lors du chargement des clients', err);
+        this.clients = [];
+      }
     );
   }
 
@@ -378,6 +398,173 @@ export class AdminDashboard implements OnInit {
   }
 
 
+
+  // ========== CONVERSATIONS & MESSAGES ==========
+
+  loadConversations() {
+    this.conversationService.getMyConversations().subscribe(
+      (convs: any) => {
+        this.conversations = Array.isArray(convs) ? convs : (convs?.items || []);
+      },
+      (err) => {
+        console.error('Erreur chargement conversations', err);
+        this.conversations = [];
+      }
+    );
+  }
+
+  openCreateConversationModal() {
+    this.conversationTicketId = '';
+    this.conversationClientId = '';
+    this.loadTickets();
+    this.loadclient();
+    this.showCreateConversationModal = true;
+  }
+
+  onTicketSelectForConversation() {
+    console.log('Ticket sélectionné:', this.conversationTicketId);
+    console.log('Tickets disponibles:', this.tickets);
+    if (this.conversationTicketId) {
+      const ticket = this.tickets.find(t => t._id === this.conversationTicketId);
+      console.log('Ticket trouvé:', ticket);
+      if (ticket?.clientId) {
+        this.conversationClientId = ticket.clientId?._id || ticket.clientId;
+        console.log('Client auto-sélectionné:', this.conversationClientId);
+      }
+    }
+  }
+
+  createConversation() {
+    console.log('Création conversation - TicketId:', this.conversationTicketId, 'ClientId:', this.conversationClientId);
+    if (!this.conversationTicketId) {
+      alert('Veuillez sélectionner un ticket');
+      return;
+    }
+
+    // Participants: admin + client (si disponible)
+    const participants = [this.currentUser.id];
+    if (this.conversationClientId) {
+      participants.push(this.conversationClientId);
+    }
+
+    const conversation: Conversation = {
+      type: 'private',
+      participants: participants,
+      createdBy: this.currentUser.id,
+      ticketId: this.conversationTicketId
+    };
+
+    this.conversationService.createConversation(conversation).subscribe(
+      (conv) => {
+        this.showCreateConversationModal = false;
+        this.loadConversations();
+        this.openConversation(conv);
+        alert('Conversation créée avec succès');
+      },
+      (err) => {
+        alert('Erreur lors de la création de la conversation');
+        console.error(err);
+      }
+    );
+  }
+
+  openConversation(conversation: Conversation) {
+    this.selectedConversation = conversation;
+    if (conversation._id) {
+      this.loadMessages(conversation._id);
+    } else {
+      this.messages = [];
+    }
+  }
+
+  loadMessages(conversationId: string) {
+    if (!conversationId) {
+      this.messages = [];
+      return;
+    }
+    this.conversationService.getMessages(conversationId).subscribe(
+      (msgs: any) => {
+        this.messages = Array.isArray(msgs) ? msgs : (msgs?.items || []);
+      },
+      (err) => {
+        console.error('Erreur chargement messages', err);
+        this.messages = [];
+      }
+    );
+  }
+
+  sendMessage() {
+    if (!this.newMessageContent.trim() || !this.selectedConversation) return;
+    if (!this.selectedConversation._id) {
+      alert('Erreur: conversation invalide. Veuillez rouvrir la conversation.');
+      return;
+    }
+
+    const message: Message = {
+      conversationId: this.selectedConversation._id,
+      sender: this.currentUser.id,
+      senderName: this.currentUser.username,
+      content: this.newMessageContent.trim()
+    };
+
+    this.conversationService.sendMessage(message).subscribe(
+      (msg) => {
+        this.messages.push(msg);
+        this.newMessageContent = '';
+      },
+      (err) => {
+        console.error('Erreur envoi message', err);
+        alert('Erreur lors de l\'envoi du message');
+      }
+    );
+  }
+
+  isMyMessage(msg: Message): boolean {
+    const senderId = (msg.sender as any)?._id || msg.sender;
+    return senderId === this.currentUser.id;
+  }
+
+  closeConversation() {
+    this.selectedConversation = null;
+    this.messages = [];
+    this.newMessageContent = '';
+  }
+
+  openConversationByTicket(ticketId: string) {
+    const ticket = this.tickets.find(t => t._id === ticketId);
+    this.conversationService.getConversationByTicket(ticketId).subscribe(
+      (conv) => {
+        this.currentView = 'conversations';
+        this.loadConversations();
+        this.openConversation(conv);
+      },
+      (err) => {
+        // Aucune conversation existante → en créer une automatiquement
+        const clientId = ticket?.clientId?._id || ticket?.clientId;
+        if (!clientId) {
+          alert('Ce ticket n\'a pas de client associé. Impossible de créer une conversation.');
+          return;
+        }
+        const conversation: Conversation = {
+          type: 'private',
+          participants: [this.currentUser.id, clientId],
+          createdBy: this.currentUser.id,
+          ticketId: ticketId
+        };
+        this.conversationService.createConversation(conversation).subscribe(
+          (newConv) => {
+            this.currentView = 'conversations';
+            this.loadConversations();
+            this.openConversation(newConv);
+          },
+          (createErr) => {
+            alert('Erreur lors de la création de la conversation');
+            console.error(createErr);
+          }
+        );
+      }
+    );
+  }
 
   getStatusBadgeClass(status: string): string {
     const classes: any = {

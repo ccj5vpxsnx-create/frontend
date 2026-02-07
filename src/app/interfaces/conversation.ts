@@ -4,7 +4,7 @@ export interface Conversation {
     name?: string;
     participants: string[];
     createdBy: string;
-    ticketId?: string;
+    ticketId?: string | { _id: string; title: string; [key: string]: any };
     createdAt?: Date;
     updatedAt?: Date;
 }

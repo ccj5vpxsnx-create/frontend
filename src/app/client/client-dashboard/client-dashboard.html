@@ -7,15 +7,29 @@
         <i class="bi bi-ticket-perforated me-2"></i>
         Espace Client
       </span>
-      <button class="btn btn-outline-light btn-sm" (click)="logout()">
-        <i class="bi bi-box-arrow-right"></i>
-        Déconnexion
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm" [ngClass]="currentView === 'tickets' ? 'btn-light' : 'btn-outline-light'" (click)="changeView('tickets')">
+          <i class="bi bi-ticket-perforated me-1"></i> Mes Tickets
+        </button>
+        <button class="btn btn-sm" [ngClass]="currentView === 'conversations' ? 'btn-light' : 'btn-outline-light'" (click)="changeView('conversations')">
+          <i class="bi bi-chat-dots me-1"></i> Conversations
+          @if (conversations.length > 0) {
+          <span class="badge bg-primary rounded-pill ms-1">{{ conversations.length }}</span>
+          }
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          Déconnexion
+        </button>
+      </div>
     </div>
   </nav>
 
   <!-- CONTENT -->
   <div class="container mt-4">
+
+    <!-- TICKETS VIEW -->
+    @if (currentView === 'tickets') {
     <div class="card shadow-sm border-0">
       <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0 fw-bold">Mes Tickets</h5>
@@ -84,10 +98,16 @@
                 </td>
 
                 <td>
-                  <button class="btn btn-sm btn-outline-danger"
-                          (click)="deleteTicket(ticket._id)">
-                    <i class="bi bi-trash"></i>
-                  </button>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-sm btn-outline-success"
+                            (click)="openConversationByTicket(ticket._id)" title="Conversation">
+                      <i class="bi bi-chat-dots"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            (click)="deleteTicket(ticket._id)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
                 </td>
               </tr>
               }
@@ -99,6 +119,114 @@
 
       </div>
     </div>
+    }
+
+    <!-- CONVERSATIONS VIEW -->
+    @if (currentView === 'conversations') {
+    <div class="card shadow-sm border-0 rounded-3">
+      <div class="card-header bg-primary text-white py-3">
+        <h5 class="mb-0 fw-bold">
+          <i class="bi bi-chat-dots me-2"></i>
+          Mes Conversations
+        </h5>
+      </div>
+
+      <div class="card-body p-0">
+        <div class="row g-0" style="min-height: 500px;">
+          <!-- Liste des conversations -->
+          <div class="col-md-4 border-end">
+            <div class="list-group list-group-flush">
+              @if (conversations.length === 0) {
+              <div class="text-center py-5 text-muted">
+                <i class="bi bi-chat-dots display-5 mb-3"></i>
+                <p>Aucune conversation</p>
+              </div>
+              }
+              @for (conv of conversations; track conv._id) {
+              <button class="list-group-item list-group-item-action py-3"
+                [class.active]="selectedConversation?._id === conv._id"
+                (click)="openConversation(conv)">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="bi bi-chat"></i>
+                  </div>
+                  <div class="flex-grow-1 overflow-hidden">
+                    <div class="fw-medium text-truncate">{{ $any(conv.ticketId)?.title || conv.ticketId }}</div>
+                    <small class="text-muted">{{ conv.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                  </div>
+                </div>
+              </button>
+              }
+            </div>
+          </div>
+
+          <!-- Zone de chat -->
+          <div class="col-md-8">
+            @if (selectedConversation) {
+            <div class="d-flex flex-column h-100">
+              <!-- Header du chat -->
+              <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    {{ $any(selectedConversation.ticketId)?.title || 'Conversation' }}
+                  </h6>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" (click)="closeConversation()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+
+              <!-- Messages -->
+              <div class="flex-grow-1 p-3 chat-container" style="max-height: 400px; overflow-y: auto;">
+                @if (messages.length === 0) {
+                <div class="text-center text-muted py-5">
+                  <i class="bi bi-chat display-5 mb-3"></i>
+                  <p>Aucun message. Envoyez le premier !</p>
+                </div>
+                }
+                @for (msg of messages; track msg._id) {
+                <div class="mb-3" [class.text-end]="isMyMessage(msg)">
+                  <div class="d-inline-block p-3 rounded-3" style="max-width: 75%;"
+                    [ngClass]="isMyMessage(msg) ? 'bg-primary text-white' : 'bg-light border'">
+                    <div class="small fw-bold mb-1">
+                      {{ isMyMessage(msg) ? 'Vous' : (msg.senderName || 'Admin') }}
+                    </div>
+                    <div>{{ msg.content }}</div>
+                    <div class="small mt-1" [class.text-white-50]="isMyMessage(msg)"
+                      [class.text-muted]="!isMyMessage(msg)">
+                      {{ msg.createdAt | date:'HH:mm' }}
+                    </div>
+                  </div>
+                </div>
+                }
+              </div>
+
+              <!-- Input message -->
+              <div class="p-3 border-top bg-white">
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="Tapez votre message..."
+                    [(ngModel)]="newMessageContent" (keyup.enter)="sendMessage()">
+                  <button class="btn btn-primary" (click)="sendMessage()">
+                    <i class="bi bi-send"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            } @else {
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+              <div class="text-center py-5">
+                <i class="bi bi-chat-square-text display-4 mb-3"></i>
+                <p>Sélectionnez une conversation pour commencer</p>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
   </div>
 </div>
 

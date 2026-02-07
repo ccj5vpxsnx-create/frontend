@@ -60,6 +60,15 @@
             <i class="bi bi-tags fs-5"></i>
             <div class="flex-grow-1">Catégories</div>
           </button>
+
+          <button class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+            [class.active]="currentView === 'conversations'" (click)="changeView('conversations')">
+            <i class="bi bi-chat-dots fs-5"></i>
+            <div class="flex-grow-1">Conversations</div>
+            @if (conversations.length > 0) {
+            <span class="badge bg-primary rounded-pill">{{ conversations.length }}</span>
+            }
+          </button>
         </div>
       </div>
 
@@ -276,6 +285,11 @@
                         <button class="btn btn-outline-primary border-end-0 rounded-start-2"
                           (click)="openAssignModal(ticket)" title="Assigner">
                           <i class="bi bi-person-plus"></i>
+                        </button>
+
+                        <button class="btn btn-outline-success border-end-0"
+                          (click)="openConversationByTicket(ticket._id!)" title="Conversation">
+                          <i class="bi bi-chat-dots"></i>
                         </button>
 
                         <button class="btn btn-outline-warning border-end-0" (click)="openEditTicketModal(ticket)"
@@ -511,6 +525,119 @@
           </div>
         </div>
         }
+
+        <!-- CONVERSATIONS VIEW -->
+        @if (currentView === 'conversations') {
+        <div class="card shadow-sm border-0 rounded-3">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+            <div>
+              <h5 class="mb-0 fw-bold">
+                <i class="bi bi-chat-dots me-2"></i>
+                Conversations
+              </h5>
+              <small class="opacity-75">Gérez vos conversations avec les clients</small>
+            </div>
+            <button class="btn btn-light btn-sm d-flex align-items-center gap-1" (click)="openCreateConversationModal()">
+              <i class="bi bi-plus-circle"></i>
+              <span>Nouvelle Conversation</span>
+            </button>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="row g-0" style="min-height: 500px;">
+              <!-- Liste des conversations -->
+              <div class="col-md-4 border-end">
+                <div class="list-group list-group-flush">
+                  @if (conversations.length === 0) {
+                  <div class="text-center py-5 text-muted">
+                    <i class="bi bi-chat-dots display-5 mb-3"></i>
+                    <p>Aucune conversation</p>
+                  </div>
+                  }
+                  @for (conv of conversations; track conv._id) {
+                  <button class="list-group-item list-group-item-action py-3"
+                    [class.active]="selectedConversation?._id === conv._id"
+                    (click)="openConversation(conv)">
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-chat"></i>
+                      </div>
+                      <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-medium text-truncate">{{ $any(conv.ticketId)?.title || conv.ticketId }}</div>
+                        <small class="text-muted">{{ conv.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                      </div>
+                    </div>
+                  </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Zone de chat -->
+              <div class="col-md-8">
+                @if (selectedConversation) {
+                <div class="d-flex flex-column h-100">
+                  <!-- Header du chat -->
+                  <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 class="mb-0 fw-bold">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        {{ $any(selectedConversation.ticketId)?.title || 'Conversation' }}
+                      </h6>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="closeConversation()">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+
+                  <!-- Messages -->
+                  <div class="flex-grow-1 p-3 chat-container" style="max-height: 400px; overflow-y: auto;">
+                    @if (messages.length === 0) {
+                    <div class="text-center text-muted py-5">
+                      <i class="bi bi-chat display-5 mb-3"></i>
+                      <p>Aucun message. Envoyez le premier !</p>
+                    </div>
+                    }
+                    @for (msg of messages; track msg._id) {
+                    <div class="mb-3" [class.text-end]="isMyMessage(msg)">
+                      <div class="d-inline-block p-3 rounded-3" style="max-width: 75%;"
+                        [ngClass]="isMyMessage(msg) ? 'bg-primary text-white' : 'bg-light border'">
+                        <div class="small fw-bold mb-1">
+                          {{ isMyMessage(msg) ? 'Vous' : (msg.senderName || 'Client') }}
+                        </div>
+                        <div>{{ msg.content }}</div>
+                        <div class="small mt-1" [class.text-white-50]="isMyMessage(msg)"
+                          [class.text-muted]="!isMyMessage(msg)">
+                          {{ msg.createdAt | date:'HH:mm' }}
+                        </div>
+                      </div>
+                    </div>
+                    }
+                  </div>
+
+                  <!-- Input message -->
+                  <div class="p-3 border-top bg-white">
+                    <div class="input-group">
+                      <input type="text" class="form-control" placeholder="Tapez votre message..."
+                        [(ngModel)]="newMessageContent" (keyup.enter)="sendMessage()">
+                      <button class="btn btn-primary" (click)="sendMessage()">
+                        <i class="bi bi-send"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                } @else {
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                  <div class="text-center py-5">
+                    <i class="bi bi-chat-square-text display-4 mb-3"></i>
+                    <p>Sélectionnez une conversation pour commencer</p>
+                  </div>
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        }
       </div>
     </div>
   </div>
@@ -720,6 +847,53 @@
         <button type="button" class="btn btn-primary" (click)="saveTicket()">
           {{ isEditingTicket ? 'Modifier' : 'Créer' }}
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+@if (showCreateConversationModal) {
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Créer une Conversation</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="showCreateConversationModal = false"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3">
+          <label class="form-label fw-medium">Sélectionner un Ticket</label>
+          <select class="form-select" [(ngModel)]="conversationTicketId" (ngModelChange)="onTicketSelectForConversation()">
+            <option value="">-- Choisir un ticket --</option>
+            @for (ticket of tickets; track ticket._id) {
+            <option [value]="ticket._id">{{ ticket.title }}</option>
+            }
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-medium">Sélectionner un Client <small class="text-muted">(optionnel)</small></label>
+          <select class="form-select" [(ngModel)]="conversationClientId">
+            <option value="">-- Choisir un client --</option>
+            @for (client of clients; track client._id) {
+            <option [value]="client._id">{{ client.username }} ({{ client.email }})</option>
+            }
+          </select>
+          @if (conversationClientId && clients.length === 0) {
+          <small class="text-success mt-1 d-block">
+            <i class="bi bi-check-circle me-1"></i>Client auto-sélectionné depuis le ticket
+          </small>
+          }
+          @if (!conversationClientId && conversationTicketId) {
+          <small class="text-warning mt-1 d-block">
+            <i class="bi bi-info-circle me-1"></i>Ce ticket n'a pas de client associé. Vous pouvez en sélectionner un ou créer la conversation sans client.
+          </small>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="showCreateConversationModal = false">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="createConversation()">Créer</button>
       </div>
     </div>
   </div>

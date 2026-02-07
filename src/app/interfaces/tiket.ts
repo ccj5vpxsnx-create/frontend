@@ -12,6 +12,7 @@ export interface Ticket {
     location?: string;
     clientId?: any;
     technicianId?: any;
+    adminId?: any;
     requester?: string;
     createdAt?: Date;
     updatedAt?: Date;

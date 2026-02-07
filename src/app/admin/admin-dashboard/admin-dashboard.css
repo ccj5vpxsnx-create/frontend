@@ -45,3 +45,29 @@
   text-transform: uppercase;
   font-size: 0.875rem;
 }
+
+/* Chat styling */
+.chat-container {
+  background-color: #f8f9fa;
+}
+
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.list-group-item.active .text-muted {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
