@@ -435,7 +435,6 @@ export class AdminDashboard implements OnInit {
   }
 
   createConversation() {
-    console.log('Création conversation - TicketId:', this.conversationTicketId, 'ClientId:', this.conversationClientId);
     if (!this.conversationTicketId) {
       alert('Veuillez sélectionner un ticket');
       return;

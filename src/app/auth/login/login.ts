@@ -18,21 +18,13 @@ export class Login implements OnInit {
   loading = false;
   passwordInvalid = false;
   showPassword = false;
-  rememberMe = false;
 
   constructor(
     private authService: Authservice,
     private router: Router
   ) { }
-
-  ngOnInit() {
-    const remembered = localStorage.getItem('rememberedUsername');
-    if (remembered) {
-      this.username = remembered;
-      this.rememberMe = true;
-    }
+  ngOnInit(): void {
   }
-
   toggleShowPassword() {
     this.showPassword = !this.showPassword;
   }
@@ -57,12 +49,7 @@ export class Login implements OnInit {
         else if (type === 'technician') this.router.navigate(['/technicien']);
         else this.router.navigate(['/login']);
 
-        if (this.rememberMe) {
-          localStorage.setItem('rememberedUsername', this.username);
-        } else {
-          localStorage.removeItem('rememberedUsername');
-        }
-
+       
         this.loading = false;
       },
       error: (err) => {

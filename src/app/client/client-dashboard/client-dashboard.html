@@ -98,16 +98,10 @@
                 </td>
 
                 <td>
-                  <div class="btn-group btn-group-sm">
-                    <button class="btn btn-sm btn-outline-success"
-                            (click)="openConversationByTicket(ticket._id)" title="Conversation">
-                      <i class="bi bi-chat-dots"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger"
-                            (click)="deleteTicket(ticket._id)">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
+                  <button class="btn btn-sm btn-outline-danger"
+                          (click)="deleteTicket(ticket._id)">
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </td>
               </tr>
               }

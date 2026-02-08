@@ -169,7 +169,6 @@ export class ClientDashboard implements OnInit {
       }
     });
   }
-
   openConversation(conversation: Conversation) {
     this.selectedConversation = conversation;
     if (conversation._id) {
@@ -178,7 +177,6 @@ export class ClientDashboard implements OnInit {
       this.messages = [];
     }
   }
-
   openConversationByTicket(ticketId: string) {
     this.conversationService.getConversationByTicket(ticketId).subscribe({
       next: (conv) => {
@@ -186,13 +184,8 @@ export class ClientDashboard implements OnInit {
           this.currentView = 'conversations';
           this.loadConversations();
           this.openConversation(conv);
-        } else {
-          alert('Aucune conversation trouvée pour ce ticket. L\'admin doit d\'abord ouvrir une conversation.');
-        }
+        } 
       },
-      error: () => {
-        alert('Aucune conversation pour ce ticket. L\'admin doit d\'abord ouvrir une conversation.');
-      }
     });
   }
 
