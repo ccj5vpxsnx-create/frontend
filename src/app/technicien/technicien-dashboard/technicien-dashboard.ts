@@ -7,6 +7,7 @@ import { TicketService } from '../../services/ticket.service';
 import { CategoryService } from '../../services/category.service';
 import { Ticket } from '../../interfaces/tiket';
 import { Category } from '../../interfaces/category';
+
 @Component({
   selector: 'app-technicien-dashboard',
   standalone: true,
@@ -36,6 +37,7 @@ export class TechnicienDashboard implements OnInit {
     location: '',
     status: 'new'
   };
+
   constructor(
     private ticketService: TicketService,
     private categoryService: CategoryService,
@@ -65,7 +67,7 @@ export class TechnicienDashboard implements OnInit {
 
   loadMyTickets() {
     this.loading = true;
-    this.ticketService.getTickets({ technicianId: this.currentUser.id }).subscribe({
+    this.ticketService.getTickets().subscribe({
       next: (response) => {
         this.myTickets = response.items;
         this.loading = false;
@@ -77,8 +79,7 @@ export class TechnicienDashboard implements OnInit {
     });
   }
 
- 
-    openEditTicketModal(ticket: Ticket) {
+  openEditTicketModal(ticket: Ticket) {
     this.isEditingTicket = true;
     this.selectedTicket = ticket;
     this.ticketForm = {
@@ -95,11 +96,6 @@ export class TechnicienDashboard implements OnInit {
   }
 
   saveTicket() {
-    if (!this.ticketForm.title || !this.ticketForm.description || !this.ticketForm.category) {
-      alert('Veuillez remplir les champs obligatoires');
-      return;
-    }
-
     const ticketData: Ticket = {
       ...this.ticketForm,
       priority: this.calculatePriority(this.ticketForm.urgency, this.ticketForm.impact),
@@ -107,7 +103,6 @@ export class TechnicienDashboard implements OnInit {
     };
 
     if (this.isEditingTicket && this.selectedTicket) {
-      // UPDATE
       this.ticketService.updateTicket(this.selectedTicket._id!, ticketData).subscribe({
         next: () => {
           this.showTicketModal = false;
@@ -116,7 +111,7 @@ export class TechnicienDashboard implements OnInit {
         },
         error: () => alert('Erreur lors de la modification')
       });
-    } 
+    }
   }
 
   calculatePriority(urgency: string, impact: string): string {
@@ -124,13 +119,14 @@ export class TechnicienDashboard implements OnInit {
     if (urgency === 'low' && impact === 'low') return 'low';
     return 'medium';
   }
+
   viewTicket(ticket: Ticket) {
     this.selectedTicket = ticket;
     this.showTicketDetail = true;
   }
+
   updateStatus(status: string) {
     if (!this.selectedTicket) return;
-
     this.ticketService.updateTicket(this.selectedTicket._id!, { status }).subscribe({
       next: () => {
         alert('Statut mis à jour avec succès!');
@@ -158,6 +154,7 @@ export class TechnicienDashboard implements OnInit {
       }
     });
   }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);
@@ -181,5 +178,4 @@ export class TechnicienDashboard implements OnInit {
     };
     return classes[priority] || 'bg-info';
   }
-
 }

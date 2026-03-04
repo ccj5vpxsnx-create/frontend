@@ -22,37 +22,25 @@ export class ConversationService {
     }
 
     createConversation(conversation: Conversation): Observable<Conversation> {
-        return this.http.post<Conversation>(
-            `${this.apiUrl}/conversations`,
-            conversation,
-            { headers: this.getHeaders() }
+        return this.http.post<Conversation>(`${this.apiUrl}/conversations`,conversation,{ headers: this.getHeaders() }
         );
     }
 
     getMyConversations(): Observable<Conversation[]> {
-        return this.http.get<Conversation[]>(
-            `${this.apiUrl}/conversations/my`,
-            { headers: this.getHeaders() }
+        return this.http.get<Conversation[]>(`${this.apiUrl}/conversations/my`,{ headers: this.getHeaders() }
         );
     }
 
     getConversationByTicket(ticketId: string): Observable<Conversation> {
-        return this.http.get<Conversation>(
-            `${this.apiUrl}/conversations/ticket/${ticketId}`,
-            { headers: this.getHeaders() }
+        return this.http.get<Conversation>(`${this.apiUrl}/conversations/ticket/${ticketId}`, { headers: this.getHeaders() }
         );
     }
     sendMessage(message: Message): Observable<Message> {
-        return this.http.post<Message>(
-            `${this.apiUrl}/messages`,
-            message,
-            { headers: this.getHeaders() }
+        return this.http.post<Message>(`${this.apiUrl}/messages`, message, { headers: this.getHeaders() }
         );
     }
     getMessages(conversationId: string): Observable<Message[]> {
-        return this.http.get<Message[]>(
-            `${this.apiUrl}/messages/${conversationId}`,
-            { headers: this.getHeaders() }
+        return this.http.get<Message[]>(  `${this.apiUrl}/messages/${conversationId}`, { headers: this.getHeaders() }
         );
     }
     

@@ -12,7 +12,6 @@ import { Authservice } from '../../../services/authservice';
   styleUrl: './request-email.css',
 })
 export class RequestEmail {
-  // Variables
   email = '';
   error = '';
   loading = false;
@@ -27,10 +26,8 @@ export class RequestEmail {
       this.error = 'Veuillez entrer votre email';
       return;
     }
-
     this.loading = true;
     this.error = '';
-
     this.authService.requestResetPassword(this.email).subscribe(
       (response) => {
         this.loading = false;

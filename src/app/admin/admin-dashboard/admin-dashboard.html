@@ -277,8 +277,7 @@
                     </td>
                     <td class="text-end pe-4">
                       <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-primary border-end-0 rounded-start-2"
-                          (click)="openAssignModal(ticket)" title="Assigner">
+                        <button class="btn btn-outline-primary border-end-0 rounded-start-2"(click)="openAssignModal(ticket)" title="Assigner">
                           <i class="bi bi-person-plus"></i>
                         </button>
 
@@ -304,7 +303,6 @@
         </div>
         }
 
-        <!-- TECHNICIANS VIEW -->
         @if (currentView === 'technicians') {
         <div class="card shadow-sm border-0 rounded-3">
           <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
@@ -376,7 +374,6 @@
         </div>
         }
 
-        <!-- CLIENTS VIEW -->
         @if (currentView === 'clients') {
         <div class="card shadow-sm border-0 rounded-3">
           <div class="card-header bg-info text-white d-flex justify-content-between align-items-center py-3">
@@ -448,7 +445,6 @@
         </div>
         }
 
-        <!-- CATEGORIES VIEW -->
         @if (currentView === 'categories') {
         <div class="card shadow-sm border-0 rounded-3">
           <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center py-3">
@@ -516,7 +512,6 @@
         </div>
         }
 
-        <!-- CONVERSATIONS VIEW -->
         @if (currentView === 'conversations') {
         <div class="card shadow-sm border-0 rounded-3">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
@@ -535,7 +530,6 @@
 
           <div class="card-body p-0">
             <div class="row g-0" style="min-height: 500px;">
-              <!-- Liste des conversations -->
               <div class="col-md-4 border-end">
                 <div class="list-group list-group-flush">
                   @if (conversations.length === 0) {
@@ -562,7 +556,6 @@
                 </div>
               </div>
 
-              <!-- Zone de chat -->
               <div class="col-md-8">
                 @if (selectedConversation) {
                 <div class="d-flex flex-column h-100">
@@ -604,7 +597,6 @@
                     }
                   </div>
 
-                  <!-- Input message -->
                   <div class="p-3 border-top bg-white">
                     <div class="input-group">
                       <input type="text" class="form-control" placeholder="Tapez votre message..."

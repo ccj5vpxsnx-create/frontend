@@ -35,10 +35,14 @@ export class Authservice {
     return user ? JSON.parse(user) : null; 
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
+ isLoggedIn(): boolean {
+  const token = this.getToken(); 
+  if (token) {              
+    return true;                 
+  } else {
+    return false;               
   }
-
+}
   logout(): void {
     localStorage.removeItem('token');       
     localStorage.removeItem('user');
@@ -54,10 +58,6 @@ export class Authservice {
   }
 
   resetPassword(email: string, code: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reset-password`, { 
-      email, 
-      code,
-       newPassword  // ✅ CORRECTION: "newpassword" au lieu de "newPassword"
-    });
+    return this.http.post(`${this.apiUrl}/reset-password`, { email, code,newPassword });
   }
 }

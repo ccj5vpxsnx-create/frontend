@@ -61,19 +61,15 @@ export class VerifyCode implements OnInit {
       
     );
   }
-
   resendCode() {
     this.loading = true;
     this.error = '';
     this.success = '';
-
     this.authService.requestResetPassword(this.email).subscribe(
       (response) => {
         this.loading = false;
         this.success = 'Code renvoyé avec succès !';
-        setTimeout(() => {
-          this.success = '';
-        }, 3000);
+        setTimeout(() => { this.success = ''; }, 3000);
 },
       
     );

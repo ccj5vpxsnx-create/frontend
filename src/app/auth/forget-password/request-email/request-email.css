@@ -1,11 +1,9 @@
 /* Background image for login page */
 .login-background {
-    /* image is served from the public/ folder at project root */
     background-image: url('/image.png');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    /* keep it fixed for a full-page background feel */
     background-attachment: fixed;
     position: relative;
     min-height: 100vh;
@@ -14,7 +12,6 @@
     justify-content: center;
 }
 
-/* dark overlay to keep text readable */
 .login-background::before {
     content: "";
     position: absolute;
@@ -23,7 +20,6 @@
     z-index: 0;
 }
 
-/* ensure the form sits above the overlay */
 .login-background .row {
     position: relative;
     z-index: 2;
@@ -33,7 +29,6 @@
     justify-content: center;
 }
 
-/* card style to enhance contrast and visibility */
 .login-card,
 .card.bg-white.bg-opacity-90 {
     background-color: rgba(255, 255, 255, 0.96) !important;
@@ -49,20 +44,17 @@
     z-index: 3;
 }
 
-/* ensure card body spacing */
 .login-card .card-body,
 .card .card-body {
     padding: 2rem;
 }
 
-/* input controls contrast */
 .form-control {
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid #e6e6e6;
     box-shadow: none;
 }
 
-/* button emphasis */
 .btn-primary {
     box-shadow: 0 6px 18px rgba(11, 83, 159, 0.18);
 }
@@ -73,8 +65,6 @@
     }
 }
 
-
-/* small adjustments for mobile */
 @media (max-width: 576px) {
     .card-body {
         padding: 1rem;
@@ -84,8 +74,6 @@
         font-size: 1.25rem;
     }
 }
-
-/* fallback gradient if image is missing */
 .login-background.no-image {
     background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }

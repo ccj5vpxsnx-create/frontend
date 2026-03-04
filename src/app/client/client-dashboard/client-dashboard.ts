@@ -23,8 +23,6 @@ export class ClientDashboard implements OnInit {
   loading = false;
 
   showTicketModal = false;
-
-  // Conversations & Chat
   currentView: 'tickets' | 'conversations' = 'tickets';
   conversations: Conversation[] = [];
   selectedConversation: Conversation | null = null;
@@ -149,7 +147,6 @@ export class ClientDashboard implements OnInit {
     return map[status] || 'bg-secondary';
   }
 
-  // ========== CONVERSATIONS & MESSAGES ==========
 
   changeView(view: 'tickets' | 'conversations') {
     this.currentView = view;
@@ -161,8 +158,15 @@ export class ClientDashboard implements OnInit {
   loadConversations() {
     this.conversationService.getMyConversations().subscribe({
       next: (convs: any) => {
-        this.conversations = Array.isArray(convs) ? convs : (convs?.items || []);
-      },
+if (Array.isArray(convs)) {
+  this.conversations = convs;
+} else {
+  if (convs && convs.items) {
+    this.conversations = convs.items;
+  } else {
+    this.conversations = [];
+  }
+}      },
       error: (err) => {
         console.error('Erreur chargement conversations', err);
         this.conversations = [];
@@ -196,8 +200,13 @@ export class ClientDashboard implements OnInit {
     }
     this.conversationService.getMessages(conversationId).subscribe({
       next: (msgs: any) => {
-        this.messages = Array.isArray(msgs) ? msgs : (msgs?.items || []);
-      },
+     if (Array.isArray(msgs)) {
+         this.messages = msgs;
+     } else if (msgs && Array.isArray(msgs.items)) {
+        this.messages = msgs.items;
+      } else {
+        this.messages = [];
+}      },
       error: (err) => {
         console.error('Erreur chargement messages', err);
         this.messages = [];
@@ -211,7 +220,6 @@ export class ClientDashboard implements OnInit {
       alert('Erreur: conversation invalide. Veuillez rouvrir la conversation.');
       return;
     }
-
     const message: Message = {
       conversationId: this.selectedConversation._id,
       sender: this.currentUser.id,

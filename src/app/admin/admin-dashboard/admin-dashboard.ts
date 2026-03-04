@@ -29,7 +29,6 @@ export class AdminDashboard implements OnInit {
   stats: TicketStats | null = null;
   clients: User[] = [];
 
-  // Conversation & Chat
   conversations: Conversation[] = [];
   selectedConversation: Conversation | null = null;
   messages: Message[] = [];
@@ -96,7 +95,7 @@ export class AdminDashboard implements OnInit {
     private router: Router
   ) { }
 
- 
+
 
   ngOnInit() {
     this.currentUser = this.authService.getUser();
@@ -124,7 +123,7 @@ export class AdminDashboard implements OnInit {
   loadStats() {
     this.ticketService.getStats().subscribe((stats) => {
       this.stats = stats;
-    },);
+    });
   }
 
   loadTickets() {
@@ -133,8 +132,7 @@ export class AdminDashboard implements OnInit {
       this.tickets = response.items;
       this.total = response.total;
       this.loading = false;
-    },
-    );
+    });
   }
   CreateTicket() {
     this.isEditingTicket = false;
@@ -222,20 +220,14 @@ export class AdminDashboard implements OnInit {
 
   assignTicket() {
     if (!this.selectedTicket || !this.selectedTechnicianId) return;
-
     this.ticketService.updateTicket(this.selectedTicket._id!, {
       technicianId: this.selectedTechnicianId,
       adminId: this.currentUser.id
-    }).subscribe(
-      () => {
+    }).subscribe(() => {
         this.showAssignModal = false;
         this.loadTickets();
         this.loadStats();
       },
-      (err) => {
-        alert('Erreur lors de l\'assignation');
-        console.error(err);
-      }
     );
   }
 
@@ -258,13 +250,11 @@ export class AdminDashboard implements OnInit {
       alert('Veuillez remplir tous les champs');
       return;
     }
-
     this.userService.createUser({
       username: this.technicianForm.username,
       email: this.technicianForm.email,
       password: this.technicianForm.password,
-      type: 'technician'
-    } as User).subscribe(
+      type: 'technician'} as User).subscribe(
       () => {
         this.showTechnicianModal = false;
         this.loadTechnicians();
@@ -276,14 +266,9 @@ export class AdminDashboard implements OnInit {
   deleteTechnician(id: string) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce technicien?')) return;
 
-    this.userService.deleteUser(id).subscribe(
-      () => {
+    this.userService.deleteUser(id).subscribe(() => {
         this.loadTechnicians();
       },
-      (err) => {
-        alert('Erreur lors de la suppression');
-        console.error(err);
-      }
     );
   }
 
@@ -292,10 +277,6 @@ export class AdminDashboard implements OnInit {
       (response: any) => {
         this.clients = Array.isArray(response) ? response : (response?.items || []);
       },
-      (err) => {
-        console.error('Erreur lors du chargement des clients', err);
-        this.clients = [];
-      }
     );
   }
 
@@ -304,26 +285,21 @@ export class AdminDashboard implements OnInit {
       alert('Veuillez remplir tous les champs');
       return;
     }
-
     this.userService.createUser({
       username: this.clientForm.username,
       email: this.clientForm.email,
       password: this.clientForm.password,
-      type: 'client'
-    } as User).subscribe(
-      () => {
+      type: 'client' } as User).subscribe(() => {
         this.showClientModal = false;
         this.loadclient();
       },
-      (err) => console.error('Erreur lors de l\'ajout', err)
     );
   }
 
   deleteclient(id: string) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce client?')) return;
 
-    this.userService.deleteUser(id).subscribe(
-      () => {
+    this.userService.deleteUser(id).subscribe(() => {
         this.loadclient();
       },
       (err) => {
@@ -349,19 +325,13 @@ export class AdminDashboard implements OnInit {
   openCategoryModal(category?: Category) {
     if (category) {
       this.editingCategory = category;
-      this.categoryForm = {
-        name: category.name,
-        description: category.description
-      };
+    
     } else {
       this.editingCategory = null;
       this.categoryForm = { name: '', description: '' };
     }
     this.showCategoryModal = true;
   }
-
-
-
 
   saveCategory() {
     if (!this.categoryForm.name || !this.categoryForm.description) {
@@ -396,16 +366,16 @@ export class AdminDashboard implements OnInit {
       (err) => console.error('Erreur lors de la suppression', err)
     );
   }
-
-
-
-  // ========== CONVERSATIONS & MESSAGES ==========
-
   loadConversations() {
     this.conversationService.getMyConversations().subscribe(
       (convs: any) => {
-        this.conversations = Array.isArray(convs) ? convs : (convs?.items || []);
-      },
+      if (Array.isArray(convs)) {
+           this.conversations = convs;
+  }     else if (convs && convs.items) {
+           this.conversations = convs.items;
+}     else {
+        this.conversations = [];
+}      },
       (err) => {
         console.error('Erreur chargement conversations', err);
         this.conversations = [];
@@ -422,37 +392,29 @@ export class AdminDashboard implements OnInit {
   }
 
   onTicketSelectForConversation() {
-    console.log('Ticket sélectionné:', this.conversationTicketId);
-    console.log('Tickets disponibles:', this.tickets);
     if (this.conversationTicketId) {
       const ticket = this.tickets.find(t => t._id === this.conversationTicketId);
       console.log('Ticket trouvé:', ticket);
       if (ticket?.clientId) {
         this.conversationClientId = ticket.clientId?._id || ticket.clientId;
-        console.log('Client auto-sélectionné:', this.conversationClientId);
       }
     }
   }
-
   createConversation() {
     if (!this.conversationTicketId) {
       alert('Veuillez sélectionner un ticket');
       return;
     }
-
-    // Participants: admin + client (si disponible)
     const participants = [this.currentUser.id];
     if (this.conversationClientId) {
       participants.push(this.conversationClientId);
     }
-
     const conversation: Conversation = {
       type: 'private',
       participants: participants,
       createdBy: this.currentUser.id,
       ticketId: this.conversationTicketId
     };
-
     this.conversationService.createConversation(conversation).subscribe(
       (conv) => {
         this.showCreateConversationModal = false;
@@ -483,12 +445,15 @@ export class AdminDashboard implements OnInit {
     }
     this.conversationService.getMessages(conversationId).subscribe(
       (msgs: any) => {
-        this.messages = Array.isArray(msgs) ? msgs : (msgs?.items || []);
-      },
-      (err) => {
-        console.error('Erreur chargement messages', err);
+     if (Array.isArray(msgs)) {
+         this.messages = msgs;
+     } else if (msgs && Array.isArray(msgs.items)) {  
+        this.messages = msgs.items;
+      } else {  
         this.messages = [];
       }
+      },
+     
     );
   }
 
@@ -538,12 +503,7 @@ export class AdminDashboard implements OnInit {
         this.openConversation(conv);
       },
       (err) => {
-        // Aucune conversation existante → en créer une automatiquement
         const clientId = ticket?.clientId?._id || ticket?.clientId;
-        if (!clientId) {
-          alert('Ce ticket n\'a pas de client associé. Impossible de créer une conversation.');
-          return;
-        }
         const conversation: Conversation = {
           type: 'private',
           participants: [this.currentUser.id, clientId],
@@ -556,10 +516,7 @@ export class AdminDashboard implements OnInit {
             this.loadConversations();
             this.openConversation(newConv);
           },
-          (createErr) => {
-            alert('Erreur lors de la création de la conversation');
-            console.error(createErr);
-          }
+        
         );
       }
     );

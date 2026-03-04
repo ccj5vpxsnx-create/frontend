@@ -53,27 +53,15 @@ export class ResetPassword implements OnInit {
   this.loading = true;
   this.error = '';
 
-  console.log('Sending reset password:', { // AJOUT POUR DEBUG
-    email: this.email,
-    code: this.code,
-    newPassword: this.newPassword
-  });
-
+ 
   this.authService.resetPassword(this.email, this.code, this.newPassword).subscribe(
     (response) => {
-      console.log('Reset success:', response); // AJOUT POUR DEBUG
       this.loading = false;
       alert('Mot de passe changé avec succès !');
       this.router.navigate(['/login']);
-    },
-    (error) => {  // AJOUT ICI - GESTION D'ERREUR
-      console.error('Reset error:', error); // AJOUT POUR DEBUG
-      this.loading = false;
-      this.error = error.error?.message || 'Erreur lors de la réinitialisation';
-    }
+    }, 
   );
 }
-
   goBack() {
     this.router.navigate(['/auth/verify-code'], {
       state: { email: this.email }
